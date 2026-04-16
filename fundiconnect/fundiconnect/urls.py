@@ -21,16 +21,23 @@ from django.conf import settings
 from django.conf.urls.static import static
 from two_factor.urls import urlpatterns as tf_urls
 from django.views.generic import RedirectView
+from django.http import JsonResponse
+
+
+def health_check(request):
+    return JsonResponse({'status': 'ok'}, status=200)
 
 
 urlpatterns = [
+    path('health/', health_check, name='health_check'),
     path('', RedirectView.as_view(pattern_name='home', permanent=False)),
     path('admin/', admin.site.urls),
     path('', include('jobs.urls')),
     path('payments/', include('payments.urls')),
     path('accounts/', include('users.urls')),
     path('two_factor/', include(tf_urls)),
-    
 ]
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Serve media files in both development and production
+# (In production, consider offloading to object storage instead)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
