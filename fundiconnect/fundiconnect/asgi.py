@@ -16,10 +16,3 @@ application = ProtocolTypeRouter(
     }
 )
 
-# Wrap with WhiteNoise for static file serving under ASGI
-try:
-    from whitenoise import WhiteNoise
-    from django.conf import settings as _settings
-    application = WhiteNoise(application, root=str(_settings.STATIC_ROOT), prefix='static')
-except Exception:
-    pass
