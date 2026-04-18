@@ -152,7 +152,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+# Only include the source static directory if it actually exists; omitting it
+# prevents collectstatic from raising an error in environments where the
+# directory hasn't been created yet.
+_static_src = BASE_DIR / 'static'
+STATICFILES_DIRS = [_static_src] if _static_src.exists() else []
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Media files (user-uploaded files)
@@ -232,10 +236,7 @@ FUNDICONNECT_ASSISTANT_GEMINI_TIMEOUT = int(os.environ.get('FUNDICONNECT_ASSISTA
 
 # Optional: structured function definitions for assistant function-calling.
 # Provide a JSON string in the env var FUNDICONNECT_ASSISTANT_FUNCTIONS or configure here.
-try:
-    _fn_raw = os.environ.get('FUNDICONNECT_ASSISTANT_FUNCTIONS') or getattr(settings if 'settings' in globals() else None, 'FUNDICONNECT_ASSISTANT_FUNCTIONS', None)
-except Exception:
-    _fn_raw = None
+_fn_raw = os.environ.get('FUNDICONNECT_ASSISTANT_FUNCTIONS') or None
 
 if _fn_raw:
     try:
@@ -294,7 +295,7 @@ LOGGING = {
     },
     'root': {
         'handlers': ['console'],
-        'level': 'WARNING',
+        'level': 'INFO',
     },
     'loggers': {
         'django': {
@@ -305,6 +306,16 @@ LOGGING = {
         'django.request': {
             'handlers': ['console'],
             'level': 'ERROR',
+            'propagate': False,
+        },
+        'daphne': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'channels': {
+            'handlers': ['console'],
+            'level': 'INFO',
             'propagate': False,
         },
     },
