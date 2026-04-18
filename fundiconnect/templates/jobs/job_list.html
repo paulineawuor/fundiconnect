@@ -35,7 +35,7 @@
 
         <form id="job-filter-form" class="mt-6 grid gap-3 lg:grid-cols-6">
             <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search title, location, category" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none ring-0 focus:border-slate-500 lg:col-span-2">
-            <input type="search" name="location" value="{{ request.GET.location }}" placeholder="Location" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none ring-0 focus:border-slate-500">
+            <input data-location-picker="1" type="search" name="location" value="{{ request.GET.location }}" placeholder="Location" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none ring-0 focus:border-slate-500">
             <select name="category" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500">
                 <option value="">All categories</option>
                 {% for category in categories %}

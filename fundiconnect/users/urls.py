@@ -40,6 +40,7 @@ urlpatterns = [
     path('assistant/respond/', views.assistant_respond, name='assistant_respond'),
     path('location/search/', views.location_search, name='location_search'),
     path('location/reverse/', views.location_reverse, name='location_reverse'),
+    path('tiles/<int:z>/<int:x>/<int:y>.png', views.tile_proxy, name='tile_proxy'),
     path(
         'password-reset/',
         auth_views.PasswordResetView.as_view(

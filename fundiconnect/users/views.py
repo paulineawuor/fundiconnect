@@ -168,6 +168,42 @@ def location_reverse(request):
         return JsonResponse(response.json())
     except requests.RequestException:
         return JsonResponse({'error': 'Reverse geocoding is temporarily unavailable.'}, status=200)
+
+
+@require_GET
+def tile_proxy(request, z, x, y):
+    """Proxy OSM tile requests so we can add a Referer/User-Agent per tile usage policy.
+
+    This keeps the browser from making cross-origin tile requests without a Referer
+    (which can trigger OSM blocks). The proxy fetches the tile server and returns
+    the image bytes with sensible caching headers.
+    """
+    try:
+        z = int(z)
+        x = int(x)
+        y = int(y)
+    except (TypeError, ValueError):
+        return JsonResponse({'error': 'Invalid tile coordinates.'}, status=400)
+
+    # Use the canonical tile endpoint (no subdomain) to simplify proxying
+    tile_url = f'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+    headers = {
+        'Referer': request.build_absolute_uri('/'),
+        'User-Agent': 'FundiConnect/1.0 tile-proxy',
+        'Accept': 'image/png,image/*;q=0.8,*/*;q=0.5',
+    }
+    try:
+        resp = requests.get(tile_url, headers=headers, timeout=15)
+        resp.raise_for_status()
+    except requests.RequestException:
+        return JsonResponse({'error': 'Tile fetch failed.'}, status=502)
+
+    content_type = resp.headers.get('Content-Type', 'image/png')
+    from django.http import HttpResponse
+    response = HttpResponse(resp.content, content_type=content_type)
+    # Allow browsers to cache tiles for a day; adjust if necessary
+    response['Cache-Control'] = 'public, max-age=86400'
+    return response
 # Phone Verification Views
 @login_required
 def verify_phone(request):

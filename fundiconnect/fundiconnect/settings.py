@@ -3,6 +3,7 @@
 from pathlib import Path
 import os
 import json
+import importlib.util
 
 
 def load_env_file(env_path):
@@ -55,7 +56,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -65,7 +65,6 @@ MIDDLEWARE = [
     'users.middleware.VerificationMiddleware',
     'django_otp.middleware.OTPMiddleware',
     'two_factor.middleware.threadlocals.ThreadLocals',
-
 ]
 
 ROOT_URLCONF = 'fundiconnect.urls'
@@ -153,7 +152,18 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+# Enable whitenoise middleware and storage only when the package is installed.
+if importlib.util.find_spec('whitenoise') is not None:
+    # Insert after SecurityMiddleware
+    try:
+        MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    except Exception:
+        pass
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+else:
+    # Whitenoise not installed; fall back to default staticfiles storage.
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # Media files (user-uploaded files)
 MEDIA_URL = '/media/'
